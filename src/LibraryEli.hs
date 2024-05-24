@@ -63,7 +63,7 @@ caminar cantMinutos turista = cambiosPorCaminar cantMinutos turista
 
 cambiosPorCaminar :: Number -> Excursion
 cambiosPorCaminar cantMinutos turista = turista{
-    cansancio = cambiarTurista turista nivelCansancio (nivelIntensidad cantMinutos)
+    cansancio = cambiarTurista turista nivelCansancio (nivelIntensidad cantMinutos),
     nivelStress = cambiarTurista turista nivelStress (-nivelIntensidad cantMinutos)
     }
 
@@ -119,8 +119,12 @@ esEducativa :: Turista -> Excursion -> Bool
 esEducativa turista excursion = deltaSegunExcursion idiomas turista excursion > 0
 
 -- Funcion 4
-excursionesDesestresantes :: [Excursion] -> Turista -> [Excursion]
-excursionesDesestresantes excursiones turista = filter ((<=3) . deltaSegunExcursion nivelStress turista) excursiones
+-- Funcion 4
+excursionesDesestresantes :: Turista -> [Excursion] -> [Excursion]
+excursionesDesestresantes turista excursiones = filter (esDesestresantePara turista) excursiones
+
+esDesestresante :: Turista -> Excursion -> Bool
+esDesestresante turista excursion = deltaSegunExcursion nivelStress turista excursion >= 3
 
 -- --------------------------- Modelaje de Tours -------------------------
 tourCompleto :: Tour
@@ -151,14 +155,14 @@ realizarExcursiones :: Tour -> Excursion
 realizarExcursiones tour turista = foldl (hacerExcursion turista) turista tour
 
 -- Funcion 2
-esConvincente :: [Tour] -> Turista -> Bool
-esConvincente tours turista = tieneExcurDeses tours turista && noDejaTuristaSolo (excursionesDesestresantes tours turistas) turista
+esConvincente :: Tour -> Turista -> Bool
+esConvincente tour turista = any (esExcursionConvincente turista) tour
 
-tieneExcurDeses :: [Tour] -> Turista -> Bool
-tieneExcurDeses tours turista = any (not . null . flip excursionesDesestresantes turista) tours
+esExcursionConvincente :: Turista -> Excursion -> Bool
+esExcursionConvincente turista excursion = esDesestresante excursion turista && dejaAcompanniado excursion turista
 
-noDejaTuristaSolo :: [Excursion] -> Turista -> Bool
-noDejaTuristaSolo excursiones turista = not. solo . (flip hacerExcursion excursion) turista 
+dejaAcompanniado :: Excursion -> Turista -> Bool
+dejaAcompanniado excursion turista = not . solo (hacerExcursion excursion turista)
 
 -- Funcion 3
 esEfectivo :: [Turista] -> Tour -> Bool
